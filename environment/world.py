@@ -2,6 +2,10 @@
 
 对应设计文档第 4 节。World 只负责环境状态与物理推进，不做任何决策
 （"看到食物要不要采集"属于 decision/ 层）。
+
+world.history 记录每一步每个 agent 的轨迹与关键事件，供 Rule/RL/LLM
+对比实验做离线分析。注意：history 只写不读，绝不进入 observe()，
+避免全局信息泄漏到局部观察。
 """
 
 from environment.food import Food
@@ -21,6 +25,7 @@ class World:
         self.colony_food = 0
         self.total_food = 0
         self.agents = []
+        self.history = []
 
         import random
 
@@ -57,7 +62,19 @@ class World:
         return None
 
     # ------------------------------------------------------------------
+    # 轨迹记录：只追加，不消耗 RNG、不改变任何仿真状态
+    # ------------------------------------------------------------------
+    def record(self, entry):
+        """追加一条轨迹或事件记录。
+
+        轨迹: {"timestep", "ant_id", "action", "position", "energy", "carrying_food"}
+        事件: {"timestep", "ant_id", "event", ...}
+        """
+        self.history.append(entry)
+
+    # ------------------------------------------------------------------
     # 局部观察：只返回 agent 视野内的信息（设计文档第 5 节）
+    # 注意：不得包含 self.history 等全局信息。
     # ------------------------------------------------------------------
     def observe(self, agent):
         nearby_food = [
