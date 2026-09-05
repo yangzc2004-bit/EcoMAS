@@ -6,6 +6,8 @@
 world.history 记录每一步每个 agent 的轨迹与关键事件，供 Rule/RL/LLM
 对比实验做离线分析。注意：history 只写不读，绝不进入 observe()，
 避免全局信息泄漏到局部观察。
+
+world.perturb() 是受控环境扰动接口，供鲁棒性实验（Experiment 4）使用。
 """
 
 from environment.food import Food
@@ -36,14 +38,27 @@ class World:
     # ------------------------------------------------------------------
     # 环境结构
     # ------------------------------------------------------------------
-    def spawn_food(self, amount=10, min_dist_from_nest=5):
-        """在远离蚁巢的随机位置生成一处食物。"""
+    def _random_food_pos(self, min_dist_from_nest=5):
         while True:
             pos = (self.rng.randrange(self.width), self.rng.randrange(self.height))
             if self.distance(pos, self.nest) >= min_dist_from_nest:
-                break
-        self.foods.append(Food(pos, amount))
+                return pos
+
+    def spawn_food(self, amount=10):
+        """在远离蚁巢的随机位置生成一处食物。"""
+        food = Food(self._random_food_pos(), amount)
+        self.foods.append(food)
         self.total_food += amount
+
+    def perturb(self):
+        """受控扰动：把所有未耗尽食物搬移到新的随机位置。
+
+        agent 记忆中的旧位置随之失效——鲁棒性实验（Experiment 4）的核心操作。
+        """
+        for food in self.foods:
+            food.position = self._random_food_pos()
+        self.record({"timestep": self.timestep, "event": "perturbation",
+                     "detail": "all foods relocated"})
 
     def register(self, agent):
         self.agents.append(agent)
