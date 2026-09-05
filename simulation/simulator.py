@@ -22,16 +22,22 @@ class Simulator:
         for ant in ants:
             world.register(ant)
 
-    def run(self, steps):
+    def run(self, steps, perturb_at=None, verbose=True):
+        """运行 steps 步；perturb_at 给定时在对应 timestep 施加 world.perturb()。"""
         world = self.world
-        print("=== EcoMAS Ant Demo ===")
-        print(f"World {world.width}x{world.height}, nest at {world.nest}, "
-              f"{len(world.foods)} food sources ({world.total_food} units)")
-        print()
+        if verbose:
+            print("=== EcoMAS Ant Demo ===")
+            print(f"World {world.width}x{world.height}, nest at {world.nest}, "
+                  f"{len(world.foods)} food sources ({world.total_food} units)")
+            print()
 
         for _ in range(steps):
             t = world.timestep
             step_events = []
+
+            if perturb_at is not None and t == perturb_at:
+                world.perturb()
+                step_events.append("!!! perturbation: all foods relocated !!!")
 
             for ant in self.ants:
                 if not ant.alive:
@@ -65,15 +71,17 @@ class Simulator:
 
             world.step()
 
-            if t % STATUS_INTERVAL == 0:
+            if verbose and t % STATUS_INTERVAL == 0:
                 alive = sum(a.alive for a in self.ants)
                 print(f"Step {t:>4} | foods left: {len(world.foods)}, "
                       f"colony food: {world.colony_food}/{world.total_food}, "
                       f"ants alive: {alive}")
-            for event in step_events:
-                print(f"Step {t:>4} | {event}")
+            if verbose:
+                for event in step_events:
+                    print(f"Step {t:>4} | {event}")
 
-        self._print_summary()
+        if verbose:
+            self._print_summary()
 
     def _print_summary(self):
         world = self.world
