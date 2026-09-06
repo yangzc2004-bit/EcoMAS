@@ -1,4 +1,4 @@
-# EcoMAS-Ant
+# EcoMAS
 
 **复杂环境中智能体协作与涌现行为研究框架**（Emergent Multi-Agent System）
 
@@ -44,8 +44,6 @@ ecomas_ant_demo/
 4. **Phase 4**：通信、记忆与长期规划
 
 ## 长期方向
-
-Ant Colony → River Ecosystem → Carbon Cycle → General Complex Systems
 
 最终目标：研究智能体如何在复杂世界中组织自己，并形成集体智能。
 
